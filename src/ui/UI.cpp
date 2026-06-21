@@ -120,9 +120,13 @@ void UI::begin() {
 
 UI::Screen UI::backTarget() {
   switch (_screen) {
-    case COMPOSE: return _entry == ENTRY_MESSAGE ? THREAD : SETTINGS;
+    case COMPOSE:
+      if (_entry == ENTRY_MESSAGE) return THREAD;
+      if (_entry == ENTRY_NAME) return SETTINGS;
+      return CHANNELS;
     case CANNED: return THREAD;
     case CONTACTS: return SETTINGS;
+    case CHANNELS: return SETTINGS;
     default: return HOME;
   }
 }
@@ -191,7 +195,7 @@ void UI::doneEntry() {
     case ENTRY_CHAN_NAME:
       if (_compose[0] == '#') {
         if (!_mesh.addHashtagChannel(_compose)) Serial.println("addchan failed");
-        go(SETTINGS);
+        go(CHANNELS);
       } else {
         strncpy(_new_chan, _compose, sizeof(_new_chan) - 1);
         _new_chan[sizeof(_new_chan) - 1] = 0;
@@ -200,7 +204,7 @@ void UI::doneEntry() {
       break;
     case ENTRY_CHAN_PSK:
       if (!_mesh.addNamedChannel(_new_chan, _compose)) Serial.println("addchan failed");
-      go(SETTINGS);
+      go(CHANNELS);
       break;
     case ENTRY_NAME:
       _mesh.setName(_compose);
@@ -231,6 +235,7 @@ void UI::drawStatusBar() {
   } else {
     const char* title = _screen == SETTINGS ? "Settings"
                         : _screen == CONTACTS ? "Contacts"
+                        : _screen == CHANNELS ? "Channels"
                         : _screen == COMPOSE ? _entry_title
                                              : _conv_name;
     char t[34];
@@ -433,7 +438,7 @@ void UI::drawSettings() {
   _canvas.setTextDatum(lgfx::middle_left);
   _canvas.drawString("Name", 16, 41);
   _canvas.drawString("Advertise self", 16, 70);
-  _canvas.drawString("Add channel", 16, 99);
+  _canvas.drawString("Channels", 16, 99);
   _canvas.drawString("Contacts", 16, 128);
   _canvas.setTextDatum(lgfx::middle_right);
   _canvas.drawString(_mesh.nodeName(), 224, 41);
@@ -497,6 +502,32 @@ void UI::drawContacts() {
   }
 }
 
+void UI::drawChannels() {
+  _canvas.fillRect(0, 24, 240, 216, COL_BG);
+  _canvas.fillRect(8, 30, 224, 28, COL_KEY);
+  _canvas.setTextDatum(lgfx::middle_center);
+  _canvas.setTextSize(2);
+  _canvas.setTextColor(COL_FG, COL_KEY);
+  _canvas.drawString("Add channel", 120, 44);
+
+  int n = _mesh.channelCount();
+  char name[24];
+  int y = 64;
+  for (int i = 0; i < n && y < 234; i++) {
+    _mesh.channelName(i, name, sizeof(name));
+    _canvas.fillRect(4, y, 232, 26, COL_PANEL);
+    _canvas.setTextDatum(lgfx::middle_left);
+    _canvas.setTextColor(COL_FG, COL_PANEL);
+    _canvas.drawString(name, 14, y + 13);
+    if (i > 0) {
+      _canvas.setTextDatum(lgfx::middle_right);
+      _canvas.setTextColor(COL_RED, COL_PANEL);
+      _canvas.drawString("x", 226, y + 13);
+    }
+    y += 28;
+  }
+}
+
 void UI::draw() {
   drawStatusBar();
   switch (_screen) {
@@ -506,6 +537,7 @@ void UI::draw() {
     case CANNED: drawCanned(); break;
     case SETTINGS: drawSettings(); break;
     case CONTACTS: drawContacts(); break;
+    case CHANNELS: drawChannels(); break;
   }
   if (_popup) drawPopup();
   _canvas.pushSprite(0, 0);
@@ -553,6 +585,7 @@ void UI::onTap(int x, int y) {
     case CANNED: onCannedTap(x, y); break;
     case SETTINGS: onSettingsTap(x, y); break;
     case CONTACTS: onContactsTap(x, y); break;
+    case CHANNELS: onChannelsTap(x, y); break;
   }
 }
 
@@ -624,7 +657,7 @@ void UI::onSettingsTap(int x, int y) {
   } else if (y >= 57 && y < 84) {
     _mesh.advertSelf();
   } else if (y >= 86 && y < 113) {
-    startEntry(ENTRY_CHAN_NAME, "Channel name");
+    go(CHANNELS);
   } else if (y >= 115 && y < 142) {
     go(CONTACTS);
   } else if (y >= 144 && y < 171) {
@@ -660,6 +693,19 @@ void UI::onContactsTap(int x, int y) {
       toggleFav(p);
       _dirty = true;
     }
+  }
+}
+
+void UI::onChannelsTap(int x, int y) {
+  if (y >= 30 && y < 58) {
+    startEntry(ENTRY_CHAN_NAME, "Channel name");
+    return;
+  }
+  if (y < 64) return;
+  int idx = (y - 64) / 28;
+  if (idx >= 1 && idx < _mesh.channelCount()) {
+    _mesh.removeChannel(idx);
+    _dirty = true;
   }
 }
 

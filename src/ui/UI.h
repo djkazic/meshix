@@ -5,7 +5,7 @@
 #include "../board/TWatchS3Board.h"
 
 class UI {
-  enum Screen { HOME, THREAD, COMPOSE, CANNED, SETTINGS, CONTACTS };
+  enum Screen { HOME, THREAD, COMPOSE, CANNED, SETTINGS, CONTACTS, CHANNELS };
   enum Entry { ENTRY_MESSAGE, ENTRY_CHAN_NAME, ENTRY_CHAN_PSK, ENTRY_NAME };
   static const int MAX_FAVS = 8;
 
@@ -60,6 +60,7 @@ class UI {
   void drawCanned();
   void drawSettings();
   void drawContacts();
+  void drawChannels();
   void drawPopup();
 
   void onTap(int x, int y);
@@ -69,6 +70,7 @@ class UI {
   void onCannedTap(int x, int y);
   void onSettingsTap(int x, int y);
   void onContactsTap(int x, int y);
+  void onChannelsTap(int x, int y);
 
   int composeLines(const Msg* m, char lines[][46], int maxlines);
   Screen backTarget();

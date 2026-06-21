@@ -7,15 +7,16 @@ extern unsigned int encode_base64(const unsigned char* input, unsigned int input
 
 #define PUBLIC_CHANNEL_PSK "izOH6cXN6mrJ5e26oRXNcg=="
 
-#define CHAT_MAGIC 0x4D584331  // "MXC1"
-
-#define CHAN_MAGIC 0x4D584831  // "MXH1"
+#define CHAT_MAGIC 0x4D584331     // "MXC1"
+#define CHAN_MAGIC 0x4D584831     // "MXH1"
+#define CONTACT_MAGIC 0x4D584B31  // "MXK1"
 
 void MeshixNode::begin() {
   BaseChatMesh::begin();
   loadOrCreateIdentity();
   addChannel("Public", PUBLIC_CHANNEL_PSK);
   loadChannels();
+  loadContacts();
   loadChat();
 }
 
@@ -95,11 +96,44 @@ void MeshixNode::saveChat() {
 }
 
 void MeshixNode::persistTick() {
-  if (_chat_dirty && millis() - _chat_flush > 4000) {
-    saveChat();
+  if ((_chat_dirty || _contacts_dirty) && millis() - _chat_flush > 4000) {
+    if (_chat_dirty) saveChat();
+    if (_contacts_dirty) saveContacts();
     _chat_dirty = false;
+    _contacts_dirty = false;
     _chat_flush = millis();
   }
+}
+
+void MeshixNode::loadContacts() {
+  File f = SPIFFS.open("/contacts.bin", "r");
+  if (!f) return;
+  uint32_t magic = 0;
+  f.read((uint8_t*)&magic, sizeof(magic));
+  if (magic == CONTACT_MAGIC) {
+    uint8_t cnt = 0;
+    f.read(&cnt, 1);
+    ContactInfo c;
+    for (int i = 0; i < cnt; i++) {
+      if (f.read((uint8_t*)&c, sizeof(c)) != sizeof(c)) break;
+      addContact(c);
+    }
+  }
+  f.close();
+}
+
+void MeshixNode::saveContacts() {
+  File f = SPIFFS.open("/contacts.bin", "w");
+  if (!f) return;
+  uint32_t magic = CONTACT_MAGIC;
+  f.write((uint8_t*)&magic, sizeof(magic));
+  uint8_t cnt = getNumContacts();
+  f.write(&cnt, 1);
+  ContactInfo c;
+  for (int i = 0; i < cnt; i++) {
+    if (getContactByIdx(i, c)) f.write((uint8_t*)&c, sizeof(c));
+  }
+  f.close();
 }
 
 void MeshixNode::loadOrCreateIdentity() {
@@ -173,6 +207,8 @@ void MeshixNode::regenerateIdentity() {
   IdentityStore store(SPIFFS, "/id");
   store.begin();
   store.save("self", self_id, _name);
+  resetContacts();
+  SPIFFS.remove("/contacts.bin");
   advertSelf();
 }
 
@@ -188,6 +224,22 @@ bool MeshixNode::addHashtagChannel(const char* name) {
   char b64[28];
   encode_base64(secret, sizeof(secret), (unsigned char*)b64);
   if (addChannel(name, b64) == NULL) return false;
+  saveChannels();
+  return true;
+}
+
+bool MeshixNode::removeChannel(int idx) {
+  int count = channelCount();
+  if (idx <= 0 || idx >= count) return false;  // index 0 is Public, kept
+
+  ChannelDetails d;
+  for (int i = idx; i < count - 1; i++) {
+    getChannel(i + 1, d);
+    setChannel(i, d);
+  }
+  ChannelDetails empty;
+  memset(&empty, 0, sizeof(empty));
+  setChannel(count - 1, empty);
   saveChannels();
   return true;
 }
@@ -253,10 +305,12 @@ bool MeshixNode::sendContactByPeer(const uint8_t peer[6], const char* text) {
 void MeshixNode::onDiscoveredContact(ContactInfo& contact, bool is_new, uint8_t path_len, const uint8_t* path) {
   Serial.printf("contact %s: %s (%d hops)\n", is_new ? "NEW" : "updated", contact.name, path_len);
   _rev++;
+  _contacts_dirty = true;
 }
 
 void MeshixNode::onContactPathUpdated(const ContactInfo& contact) {
   Serial.printf("path updated for %s (%d hops)\n", contact.name, contact.out_path_len);
+  _contacts_dirty = true;
 }
 
 ContactInfo* MeshixNode::processAck(const uint8_t* data) {

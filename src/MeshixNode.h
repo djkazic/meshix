@@ -34,6 +34,7 @@ class MeshixNode : public BaseChatMesh {
   int _pending_msg;
   ContactInfo* _pending_contact;
   bool _chat_dirty;
+  bool _contacts_dirty;
   uint32_t _chat_flush;
   uint32_t _inbound;
   Notify _notify;
@@ -44,6 +45,8 @@ class MeshixNode : public BaseChatMesh {
   void saveChat();
   void loadChannels();
   void saveChannels();
+  void loadContacts();
+  void saveContacts();
   void notifyContact(const ContactInfo& c, const char* text);
   void notifyChannel(int idx, const char* text);
   void maybeSyncClock(uint32_t ts);
@@ -67,7 +70,7 @@ public:
   MeshixNode(mesh::Radio& radio, mesh::MillisecondClock& ms, mesh::RNG& rng, mesh::RTCClock& rtc, mesh::PacketManager& mgr, mesh::MeshTables& tables)
     : BaseChatMesh(radio, ms, rng, rtc, mgr, tables), _msg_n(0), _msg_head(MSG_CAP - 1), _rev(0),
       _pending_ack(0), _pending_msg(-1), _pending_contact(NULL), _chat_dirty(false),
-      _chat_flush(0), _inbound(0), _have_notify(false) {}
+      _contacts_dirty(false), _chat_flush(0), _inbound(0), _have_notify(false) {}
 
   void begin();
   void persistTick();
@@ -79,6 +82,7 @@ public:
   void regenerateIdentity();
   bool addNamedChannel(const char* name, const char* psk_base64);
   bool addHashtagChannel(const char* name);
+  bool removeChannel(int idx);
 
   int channelCount();
   bool channelName(int idx, char* out, int n);
