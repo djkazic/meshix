@@ -7,7 +7,7 @@ extern unsigned int encode_base64(const unsigned char* input, unsigned int input
 
 #define PUBLIC_CHANNEL_PSK "izOH6cXN6mrJ5e26oRXNcg=="
 
-#define CHAT_MAGIC 0x4D584331     // "MXC1"
+#define CHAT_MAGIC 0x4D584332     // "MXC2" (bumped: Msg layout changed)
 #define CHAN_MAGIC 0x4D584831     // "MXH1"
 #define CONTACT_MAGIC 0x4D584B31  // "MXK1"
 

@@ -290,7 +290,7 @@ int UI::composeLines(const Msg* m, char lines[][46], int maxlines) {
   snprintf(lines[0], 46, "%s %s", ts, who);
   int nl = 1;
 
-  char body[140];
+  char body[176];
   if (m->mine && _conv_kind == CONV_CONTACT) {
     snprintf(body, sizeof(body), "%s %s", m->text, m->acked ? "[ok]" : "[..]");
   } else {
@@ -328,9 +328,9 @@ void UI::drawThread() {
   }
 
   const int VP = 15;
-  char lines[5][46];
+  char lines[7][46];
   int total = 0;
-  for (int k = n - 1; k >= 0; k--) total += composeLines(msgs[k], lines, 5);
+  for (int k = n - 1; k >= 0; k--) total += composeLines(msgs[k], lines, 7);
 
   int maxscroll = total > VP ? total - VP : 0;
   if (_thread_scroll > maxscroll) _thread_scroll = maxscroll;
@@ -339,7 +339,7 @@ void UI::drawThread() {
 
   int gl = 0, y = 28;
   for (int k = n - 1; k >= 0; k--) {
-    int c = composeLines(msgs[k], lines, 5);
+    int c = composeLines(msgs[k], lines, 7);
     for (int li = 0; li < c; li++) {
       if (gl >= topLine && y < 194) {
         uint16_t col = li == 0 ? (msgs[k]->mine ? COL_GREEN : COL_ACCENT) : COL_FG;

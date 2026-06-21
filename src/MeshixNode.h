@@ -12,7 +12,7 @@ struct Msg {
   uint8_t peer[6];
   bool mine;
   bool acked;
-  char text[104];
+  char text[164];
 };
 
 struct Notify {
