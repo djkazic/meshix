@@ -46,6 +46,8 @@ void TWatchS3Board::idleSleep() {
   gpio_num_t lora = (gpio_num_t)P_LORA_DIO_1;
   gpio_num_t touch = (gpio_num_t)PIN_TOUCH_INT;
 
+  // stay awake briefly after a radio/touch wake to drain back-to-back packets
+  if (millis() < _drain_until) return;
   if (gpio_get_level(lora)) return;  // packet already waiting
 
   esp_sleep_enable_timer_wakeup(500000ULL);
@@ -55,6 +57,10 @@ void TWatchS3Board::idleSleep() {
   esp_light_sleep_start();
   gpio_wakeup_disable(lora);
   gpio_wakeup_disable(touch);
+
+  if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_GPIO) {
+    _drain_until = millis() + 50;
+  }
 }
 
 void TWatchS3Board::buzz() {

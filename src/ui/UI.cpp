@@ -10,6 +10,7 @@
 #define COL_GREEN  0x05E0
 #define COL_GOLD   0xFE60
 #define COL_GRAY   0x8410
+#define COL_RED    0xF800
 
 static const char* const LAYER_LO[3] = {"qwertyuiop", "asdfghjkl", "zxcvbnm"};
 static const char* const LAYER_SY[3] = {"1234567890", "@#&%*-+/=", "_,.:;!?()"};
@@ -241,11 +242,18 @@ void UI::drawStatusBar() {
   char clk[8];
   fmtTime(_mesh.now(), clk);
   _canvas.setTextDatum(lgfx::middle_right);
-  _canvas.drawString(clk, 192, 12);
+  _canvas.drawString(clk, 176, 12);
 
-  char b[16];
-  snprintf(b, sizeof(b), "%d%%%s", _board.batteryPercent(), _board.isCharging() ? "+" : "");
-  _canvas.drawString(b, 236, 12);
+  int pct = _board.batteryPercent();
+  char b[8];
+  snprintf(b, sizeof(b), "%d%%", pct);
+  _canvas.drawString(b, 212, 12);
+
+  int bx = 216, by = 7, bw = 18, bh = 10;
+  _canvas.drawRect(bx, by, bw, bh, COL_FG);
+  _canvas.fillRect(bx + bw, by + 3, 2, 4, COL_FG);
+  uint16_t fc = _board.isCharging() ? COL_GREEN : (pct <= 15 ? COL_RED : COL_FG);
+  _canvas.fillRect(bx + 1, by + 1, (bw - 2) * pct / 100, bh - 2, fc);
 }
 
 void UI::drawHome() {
