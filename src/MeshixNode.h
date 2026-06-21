@@ -76,6 +76,7 @@ public:
   uint32_t now() { return getRTCClock()->getCurrentTime(); }
 
   void advertSelf();
+  void regenerateIdentity();
   bool addNamedChannel(const char* name, const char* psk_base64);
   bool addHashtagChannel(const char* name);
 

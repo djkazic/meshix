@@ -164,6 +164,18 @@ void MeshixNode::advertSelf() {
   }
 }
 
+void MeshixNode::regenerateIdentity() {
+  self_id = radio_new_identity();
+  if (!_name[0]) {
+    uint8_t* pk = self_id.pub_key;
+    snprintf(_name, sizeof(_name), "Meshix-%02X%02X", pk[0], pk[1]);
+  }
+  IdentityStore store(SPIFFS, "/id");
+  store.begin();
+  store.save("self", self_id, _name);
+  advertSelf();
+}
+
 bool MeshixNode::addNamedChannel(const char* name, const char* psk_base64) {
   if (addChannel(name, psk_base64) == NULL) return false;
   saveChannels();

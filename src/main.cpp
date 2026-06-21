@@ -20,7 +20,7 @@ static char line[128];
 static uint8_t line_len;
 
 static void printHelp() {
-  Serial.println("commands: adv | bat | time <epoch> | addchan <name> <psk> | help");
+  Serial.println("commands: adv | bat | time <epoch> | addchan <name> <psk> | regen | help");
 }
 
 static void handleLine(char* s) {
@@ -32,6 +32,11 @@ static void handleLine(char* s) {
   } else if (!strcmp(s, "bat")) {
     Serial.printf("vbat=%dmV vbus=%dmV charging=%d\n", board.getBattMilliVolts(),
                   board.getVbusMilliVolts(), board.isCharging());
+  } else if (!strcmp(s, "regen")) {
+    the_mesh.regenerateIdentity();
+    mesh::LocalIdentity& id = the_mesh.self_id;
+    Serial.printf("regenerated, pubkey %02X%02X%02X%02X\n", id.pub_key[0], id.pub_key[1],
+                  id.pub_key[2], id.pub_key[3]);
   } else if (!strcmp(s, "time")) {
     Serial.printf("rtc now %lu\n", (unsigned long)the_mesh.now());
   } else if (!strncmp(s, "time ", 5)) {
