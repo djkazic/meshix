@@ -719,7 +719,10 @@ void UI::loop() {
       _start_x = x;
       _start_y = y;
       _wake_consumed = _asleep;
-      if (_asleep) wake();
+      if (_asleep) {
+        Serial.printf("wake: touch %d,%d\n", x, y);
+        wake();
+      }
     }
     _last_x = x;
     _last_y = y;
@@ -760,7 +763,10 @@ void UI::loop() {
         _popup_since = millis();
       }
     }
-    if (_asleep) wake();
+    if (_asleep) {
+      Serial.println("wake: msg");
+      wake();
+    }
     _last_activity = millis();
     _dirty = true;
   }
