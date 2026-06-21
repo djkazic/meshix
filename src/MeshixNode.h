@@ -87,6 +87,7 @@ public:
 
   bool sendChannel(int chan, const char* text);
   bool sendContact(int contactIdx, const char* text);
+  bool sendContactByPeer(const uint8_t peer[6], const char* text);
 
   uint32_t rev() const { return _rev; }
   uint32_t inboundRev() const { return _inbound; }

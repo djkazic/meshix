@@ -19,7 +19,6 @@ class UI {
 
   uint8_t _conv_kind;
   int _conv_chan;
-  int _conv_contact;
   uint8_t _conv_peer[6];
   char _conv_name[24];
 
@@ -89,7 +88,7 @@ class UI {
 public:
   UI(TWatchLGFX& tft, MeshixNode& mesh, TWatchS3Board& board)
     : _tft(tft), _canvas(&tft), _mesh(mesh), _board(board), _screen(HOME), _dirty(true),
-      _conv_kind(CONV_CHANNEL), _conv_chan(0), _conv_contact(0),
+      _conv_kind(CONV_CHANNEL), _conv_chan(0),
       _entry(ENTRY_MESSAGE), _compose_len(0), _shift(false), _sym(false),
       _clock24(true), _tz(0), _sleep_secs(30), _favN(0),
       _last_activity(0), _asleep(false), _wake_consumed(false),

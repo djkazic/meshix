@@ -9,7 +9,7 @@
 #include "ui/UI.h"
 
 static ArduinoMillis ms_clock;
-static StdRNG rng;
+static EspRNG rng;
 static SimpleMeshTables tables;
 static StaticPoolPacketManager mgr(16);
 static MeshixNode the_mesh(radio_driver, ms_clock, rng, rtc_clock, mgr, tables);
@@ -79,7 +79,6 @@ void setup() {
     Serial.println("radio init failed, halting");
     while (true) delay(1000);
   }
-  rng.begin(radio_driver.getRngSeed());
 
   SPIFFS.begin(true);
   the_mesh.begin();

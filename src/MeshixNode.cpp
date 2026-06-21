@@ -34,7 +34,8 @@ void MeshixNode::loadChannels() {
       if (f.read((uint8_t*)name, 32) != 32) break;
       name[32] = 0;
       f.read(&len, 1);
-      f.read(secret, 32);
+      if (f.read(secret, 32) != 32) break;
+      if (len != 16 && len != 32) continue;
       char b64[48];
       encode_base64(secret, len, (unsigned char*)b64);
       addChannel(name, b64);
@@ -229,6 +230,12 @@ bool MeshixNode::sendContact(int contactIdx, const char* text) {
   _pending_ack = expected_ack;
   _pending_contact = lookupContactByPubKey(c.id.pub_key, PUB_KEY_SIZE);
   return true;
+}
+
+bool MeshixNode::sendContactByPeer(const uint8_t peer[6], const char* text) {
+  int idx = contactIndexByPeer(peer);
+  if (idx < 0) return false;
+  return sendContact(idx, text);
 }
 
 void MeshixNode::onDiscoveredContact(ContactInfo& contact, bool is_new, uint8_t path_len, const uint8_t* path) {

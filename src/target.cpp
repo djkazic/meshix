@@ -17,6 +17,6 @@ bool radio_init() {
 }
 
 mesh::LocalIdentity radio_new_identity() {
-  RadioNoiseListener rng(radio);
+  EspRNG rng;
   return mesh::LocalIdentity(&rng);
 }

@@ -163,7 +163,6 @@ void UI::openConversation(uint8_t kind, int idx) {
     _conv_chan = idx;
     _mesh.channelName(idx, _conv_name, sizeof(_conv_name));
   } else {
-    _conv_contact = idx;
     _mesh.contactName(idx, _conv_name, sizeof(_conv_name));
     _mesh.contactPeer(idx, _conv_peer);
   }
@@ -212,7 +211,7 @@ void UI::doneEntry() {
 void UI::send(const char* text) {
   if (!text[0]) return;
   bool ok = _conv_kind == CONV_CHANNEL ? _mesh.sendChannel(_conv_chan, text)
-                                       : _mesh.sendContact(_conv_contact, text);
+                                       : _mesh.sendContactByPeer(_conv_peer, text);
   if (!ok) Serial.println("ui: send failed");
 }
 
