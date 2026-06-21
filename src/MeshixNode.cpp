@@ -96,7 +96,7 @@ void MeshixNode::saveChat() {
 }
 
 void MeshixNode::persistTick() {
-  if ((_chat_dirty || _contacts_dirty) && millis() - _chat_flush > 4000) {
+  if ((_chat_dirty || _contacts_dirty) && millis() - _chat_flush > 30000) {
     if (_chat_dirty) saveChat();
     if (_contacts_dirty) saveContacts();
     _chat_dirty = false;
@@ -305,12 +305,11 @@ bool MeshixNode::sendContactByPeer(const uint8_t peer[6], const char* text) {
 void MeshixNode::onDiscoveredContact(ContactInfo& contact, bool is_new, uint8_t path_len, const uint8_t* path) {
   Serial.printf("contact %s: %s (%d hops)\n", is_new ? "NEW" : "updated", contact.name, path_len);
   _rev++;
-  _contacts_dirty = true;
+  if (is_new) _contacts_dirty = true;
 }
 
 void MeshixNode::onContactPathUpdated(const ContactInfo& contact) {
   Serial.printf("path updated for %s (%d hops)\n", contact.name, contact.out_path_len);
-  _contacts_dirty = true;
 }
 
 ContactInfo* MeshixNode::processAck(const uint8_t* data) {

@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <SPIFFS.h>
 #include <WiFi.h>
+#include <esp_system.h>
 #include <helpers/ArduinoHelpers.h>
 #include <helpers/SimpleMeshTables.h>
 #include <helpers/StaticPoolPacketManager.h>
@@ -94,6 +95,22 @@ void setup() {
   Serial.printf("radio %.3fMHz bw=%.1f sf=%d cr=%d\n", (float)LORA_FREQ, (float)LORA_BW,
                 (int)LORA_SF, (int)LORA_CR);
   printHelp();
+
+  int reason = esp_reset_reason();
+  const char* rr;
+  switch (reason) {
+    case ESP_RST_POWERON: rr = "power-on"; break;
+    case ESP_RST_BROWNOUT: rr = "BROWNOUT"; break;
+    case ESP_RST_PANIC: rr = "PANIC"; break;
+    case ESP_RST_INT_WDT: rr = "INT_WDT"; break;
+    case ESP_RST_TASK_WDT: rr = "TASK_WDT"; break;
+    case ESP_RST_WDT: rr = "WDT"; break;
+    case ESP_RST_SW: rr = "sw"; break;
+    case ESP_RST_EXT: rr = "ext"; break;
+    case ESP_RST_DEEPSLEEP: rr = "deepsleep"; break;
+    default: rr = "other"; break;
+  }
+  Serial.printf("reset reason: %s (%d)\n", rr, reason);
 
   ui.begin();
   the_mesh.advertSelf();

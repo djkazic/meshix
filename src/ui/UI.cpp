@@ -712,6 +712,19 @@ void UI::onChannelsTap(int x, int y) {
 void UI::loop() {
   int32_t x, y;
   bool touched = _tft.getTouch(&x, &y);
+
+  // filter capacitive ghost touches that would otherwise wake the screen
+  if (touched && _asleep && !_touch_down) {
+    for (int i = 0; i < 4; i++) {
+      delay(12);
+      int32_t tx, ty;
+      if (!_tft.getTouch(&tx, &ty)) {
+        touched = false;
+        break;
+      }
+    }
+  }
+
   if (touched) {
     _last_activity = millis();
     if (!_touch_down) {
