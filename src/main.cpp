@@ -127,6 +127,4 @@ void loop() {
   ui.loop();
   board.buzzTick();
   pollSerial();
-
-  if (ui.isAsleep() && !board.isCharging()) board.idleSleep();
 }
