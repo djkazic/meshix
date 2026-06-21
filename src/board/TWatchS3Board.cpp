@@ -2,7 +2,7 @@
 #include <esp_sleep.h>
 #include <driver/gpio.h>
 
-#define PIN_TOUCH_INT 16
+static portMUX_TYPE sleepMux = portMUX_INITIALIZER_UNLOCKED;
 
 void TWatchS3Board::begin() {
   ESP32Board::begin();
@@ -44,23 +44,19 @@ void TWatchS3Board::begin() {
 
 void TWatchS3Board::idleSleep() {
   gpio_num_t lora = (gpio_num_t)P_LORA_DIO_1;
-  gpio_num_t touch = (gpio_num_t)PIN_TOUCH_INT;
+  esp_sleep_enable_timer_wakeup(200000ULL);  // 200ms: poll touch + housekeeping
 
-  // stay awake briefly after a radio/touch wake to drain back-to-back packets
-  if (millis() < _drain_until) return;
-  if (gpio_get_level(lora)) return;  // packet already waiting
-
-  esp_sleep_enable_timer_wakeup(500000ULL);
+  portENTER_CRITICAL(&sleepMux);
+  if (gpio_get_level(lora) == HIGH) {  // packet pending, don't sleep
+    portEXIT_CRITICAL(&sleepMux);
+    return;
+  }
   esp_sleep_enable_gpio_wakeup();
   gpio_wakeup_enable(lora, GPIO_INTR_HIGH_LEVEL);
-  gpio_wakeup_enable(touch, GPIO_INTR_LOW_LEVEL);
   esp_light_sleep_start();
   gpio_wakeup_disable(lora);
-  gpio_wakeup_disable(touch);
-
-  if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_GPIO) {
-    _drain_until = millis() + 50;
-  }
+  gpio_set_intr_type(lora, GPIO_INTR_POSEDGE);
+  portEXIT_CRITICAL(&sleepMux);
 }
 
 void TWatchS3Board::buzz() {

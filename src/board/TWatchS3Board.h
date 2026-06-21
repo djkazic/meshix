@@ -14,7 +14,6 @@ class TWatchS3Board : public ESP32Board {
   int _batt_ema = 0;
   int _buzz_seg = -1;
   uint32_t _buzz_t = 0;
-  uint32_t _drain_until = 0;
 
 public:
   void begin();
