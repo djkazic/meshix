@@ -12,6 +12,8 @@ class TWatchS3Board : public ESP32Board {
   bool haptic_ok = false;
   uint32_t _batt_ms = 0;
   int _batt_ema = 0;
+  int _buzz_seg = -1;
+  uint32_t _buzz_t = 0;
 
 public:
   void begin();
@@ -22,5 +24,6 @@ public:
   uint16_t getVbusMilliVolts();
   int batteryPercent();
   void buzz();
+  void buzzTick();
   void idleSleep();
 };

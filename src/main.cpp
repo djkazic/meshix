@@ -104,6 +104,7 @@ void loop() {
   the_mesh.persistTick();
   rtc_clock.tick();
   ui.loop();
+  board.buzzTick();
   pollSerial();
 
   if (ui.isAsleep() && !board.isCharging()) board.idleSleep();

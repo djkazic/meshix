@@ -60,12 +60,21 @@ void TWatchS3Board::idleSleep() {
 void TWatchS3Board::buzz() {
   if (!haptic_ok) return;
   haptic.setMode(DRV2605_MODE_REALTIME);
-  for (int i = 0; i < 3; i++) {
-    haptic.setRealtimeValue(0x7F);
-    delay(140);
+  haptic.setRealtimeValue(0x7F);
+  _buzz_seg = 0;
+  _buzz_t = millis() + 140;
+}
+
+void TWatchS3Board::buzzTick() {
+  if (_buzz_seg < 0 || millis() < _buzz_t) return;
+  if (++_buzz_seg > 5) {
     haptic.setRealtimeValue(0);
-    if (i < 2) delay(90);
+    _buzz_seg = -1;
+    return;
   }
+  bool on = (_buzz_seg & 1) == 0;
+  haptic.setRealtimeValue(on ? 0x7F : 0);
+  _buzz_t = millis() + (on ? 140 : 90);
 }
 
 uint16_t TWatchS3Board::getBattMilliVolts() {
