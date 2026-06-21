@@ -1,5 +1,5 @@
 #include "UI.h"
-#include <SPIFFS.h>
+#include <LittleFS.h>
 
 #define COL_BG     0x0000
 #define COL_FG     0xFFFF
@@ -58,7 +58,7 @@ void UI::fmtTime(uint32_t ts, char* out) {
 }
 
 void UI::loadPrefs() {
-  File f = SPIFFS.open("/prefs.bin", "r");
+  File f = LittleFS.open("/prefs.bin", "r");
   if (!f) return;
   PrefsBlob p;
   if (f.read((uint8_t*)&p, sizeof(p)) == sizeof(p) && p.magic == 0x4F) {
@@ -79,7 +79,7 @@ void UI::savePrefs() {
   p.sleep_secs = _sleep_secs;
   p.favN = _favN;
   memcpy(p.favs, _favs, sizeof(_favs));
-  File f = SPIFFS.open("/prefs.bin", "w");
+  File f = LittleFS.open("/prefs.bin", "w");
   if (!f) return;
   f.write((uint8_t*)&p, sizeof(p));
   f.close();

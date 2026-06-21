@@ -1,5 +1,5 @@
 #include "MeshixNode.h"
-#include <SPIFFS.h>
+#include <LittleFS.h>
 #include <helpers/IdentityStore.h>
 #include "target.h"
 
@@ -21,7 +21,7 @@ void MeshixNode::begin() {
 }
 
 void MeshixNode::loadChannels() {
-  File f = SPIFFS.open("/chans.bin", "r");
+  File f = LittleFS.open("/chans.bin", "r");
   if (!f) return;
   uint32_t magic = 0;
   f.read((uint8_t*)&magic, sizeof(magic));
@@ -46,7 +46,7 @@ void MeshixNode::loadChannels() {
 }
 
 void MeshixNode::saveChannels() {
-  File f = SPIFFS.open("/chans.bin", "w");
+  File f = LittleFS.open("/chans.bin", "w");
   if (!f) return;
   uint32_t magic = CHAN_MAGIC;
   f.write((uint8_t*)&magic, sizeof(magic));
@@ -68,7 +68,7 @@ void MeshixNode::saveChannels() {
 }
 
 void MeshixNode::loadChat() {
-  File f = SPIFFS.open("/chat.bin", "r");
+  File f = LittleFS.open("/chat.bin", "r");
   if (!f) return;
   uint32_t magic = 0;
   f.read((uint8_t*)&magic, sizeof(magic));
@@ -85,7 +85,7 @@ void MeshixNode::loadChat() {
 }
 
 void MeshixNode::saveChat() {
-  File f = SPIFFS.open("/chat.bin", "w");
+  File f = LittleFS.open("/chat.bin", "w");
   if (!f) return;
   uint32_t magic = CHAT_MAGIC;
   f.write((uint8_t*)&magic, sizeof(magic));
@@ -106,7 +106,7 @@ void MeshixNode::persistTick() {
 }
 
 void MeshixNode::loadContacts() {
-  File f = SPIFFS.open("/contacts.bin", "r");
+  File f = LittleFS.open("/contacts.bin", "r");
   if (!f) return;
   uint32_t magic = 0;
   f.read((uint8_t*)&magic, sizeof(magic));
@@ -123,7 +123,7 @@ void MeshixNode::loadContacts() {
 }
 
 void MeshixNode::saveContacts() {
-  File f = SPIFFS.open("/contacts.bin", "w");
+  File f = LittleFS.open("/contacts.bin", "w");
   if (!f) return;
   uint32_t magic = CONTACT_MAGIC;
   f.write((uint8_t*)&magic, sizeof(magic));
@@ -137,7 +137,7 @@ void MeshixNode::saveContacts() {
 }
 
 void MeshixNode::loadOrCreateIdentity() {
-  IdentityStore store(SPIFFS, "/id");
+  IdentityStore store(LittleFS, "/id");
   store.begin();
 
   if (store.load("self", self_id, _name, sizeof(_name)) && _name[0]) {
@@ -185,7 +185,7 @@ void MeshixNode::setName(const char* name) {
   if (!name[0]) return;
   strncpy(_name, name, sizeof(_name) - 1);
   _name[sizeof(_name) - 1] = 0;
-  IdentityStore store(SPIFFS, "/id");
+  IdentityStore store(LittleFS, "/id");
   store.begin();
   store.save("self", self_id, _name);
 }
@@ -204,11 +204,11 @@ void MeshixNode::regenerateIdentity() {
     uint8_t* pk = self_id.pub_key;
     snprintf(_name, sizeof(_name), "Meshix-%02X%02X", pk[0], pk[1]);
   }
-  IdentityStore store(SPIFFS, "/id");
+  IdentityStore store(LittleFS, "/id");
   store.begin();
   store.save("self", self_id, _name);
   resetContacts();
-  SPIFFS.remove("/contacts.bin");
+  LittleFS.remove("/contacts.bin");
   advertSelf();
 }
 

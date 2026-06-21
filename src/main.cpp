@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <SPIFFS.h>
+#include <LittleFS.h>
 #include <WiFi.h>
 #include <esp_system.h>
 #include <helpers/ArduinoHelpers.h>
@@ -19,9 +19,10 @@ static UI ui(tft, the_mesh, board);
 
 static char line[128];
 static uint8_t line_len;
+static char boot_reason[24] = "?";
 
 static void printHelp() {
-  Serial.println("commands: adv | bat | time <epoch> | addchan <name> <psk> | regen | help");
+  Serial.println("commands: adv | bat | boot | time <epoch> | addchan <name> <psk> | regen | help");
 }
 
 static void handleLine(char* s) {
@@ -38,6 +39,8 @@ static void handleLine(char* s) {
     mesh::LocalIdentity& id = the_mesh.self_id;
     Serial.printf("regenerated, pubkey %02X%02X%02X%02X\n", id.pub_key[0], id.pub_key[1],
                   id.pub_key[2], id.pub_key[3]);
+  } else if (!strcmp(s, "boot")) {
+    Serial.printf("last reset: %s, uptime %lus\n", boot_reason, (unsigned long)(millis() / 1000));
   } else if (!strcmp(s, "time")) {
     Serial.printf("rtc now %lu\n", (unsigned long)the_mesh.now());
   } else if (!strncmp(s, "time ", 5)) {
@@ -86,7 +89,7 @@ void setup() {
     while (true) delay(1000);
   }
 
-  SPIFFS.begin(true);
+  LittleFS.begin(true);
   the_mesh.begin();
 
   mesh::LocalIdentity& id = the_mesh.self_id;
@@ -110,7 +113,8 @@ void setup() {
     case ESP_RST_DEEPSLEEP: rr = "deepsleep"; break;
     default: rr = "other"; break;
   }
-  Serial.printf("reset reason: %s (%d)\n", rr, reason);
+  snprintf(boot_reason, sizeof(boot_reason), "%s (%d)", rr, reason);
+  Serial.printf("reset reason: %s\n", boot_reason);
 
   ui.begin();
   the_mesh.advertSelf();
