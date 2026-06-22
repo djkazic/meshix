@@ -13,7 +13,7 @@
 #define COL_RED    0xF800
 
 static const char* const LAYER_LO[3] = {"qwertyuiop", "asdfghjkl", "zxcvbnm"};
-static const char* const LAYER_SY[3] = {"1234567890", "@#&%*-+/=", "_,.:;!?()"};
+static const char* const LAYER_SY[3] = {"1234567890", "@#&%*-+/=", "'_,.:;!?()"};
 static const int KB_TOP = 74;
 static const int KB_ROW_H = 41;
 

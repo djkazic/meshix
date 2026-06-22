@@ -150,6 +150,42 @@ void MeshixNode::loadOrCreateIdentity() {
   store.save("self", self_id, _name);
 }
 
+// Transliterate UTF-8 to the ASCII the 6x8 display font can render: map common
+// "smart" punctuation to ASCII, replace anything else non-ASCII with '?'.
+static void sanitizeAscii(const char* in, char* out, int outsz) {
+  int o = 0;
+  const uint8_t* p = (const uint8_t*)in;
+  while (*p && o < outsz - 1) {
+    uint8_t c = *p;
+    if (c < 0x80) {
+      out[o++] = c;
+      p++;
+      continue;
+    }
+    uint32_t cp;
+    int len;
+    if ((c & 0xE0) == 0xC0) { cp = c & 0x1F; len = 2; }
+    else if ((c & 0xF0) == 0xE0) { cp = c & 0x0F; len = 3; }
+    else if ((c & 0xF8) == 0xF0) { cp = c & 0x07; len = 4; }
+    else { p++; continue; }
+    bool ok = true;
+    for (int i = 1; i < len; i++) {
+      if ((p[i] & 0xC0) != 0x80) { ok = false; break; }
+      cp = (cp << 6) | (p[i] & 0x3F);
+    }
+    if (!ok) { p++; continue; }
+    p += len;
+    switch (cp) {
+      case 0x2018: case 0x2019: out[o++] = '\''; break;
+      case 0x201C: case 0x201D: out[o++] = '"'; break;
+      case 0x2013: case 0x2014: out[o++] = '-'; break;
+      case 0x2026: out[o++] = '.'; break;
+      default: out[o++] = '?'; break;
+    }
+  }
+  out[o] = 0;
+}
+
 int MeshixNode::pushMsg(uint8_t kind, int chan, const uint8_t* peer6, bool mine, const char* text) {
   _msg_head = (_msg_head + 1) % MSG_CAP;
   if (_msg_n < MSG_CAP) _msg_n++;
@@ -161,8 +197,7 @@ int MeshixNode::pushMsg(uint8_t kind, int chan, const uint8_t* peer6, bool mine,
   m.acked = false;
   if (peer6) memcpy(m.peer, peer6, 6);
   else memset(m.peer, 0, 6);
-  strncpy(m.text, text, sizeof(m.text) - 1);
-  m.text[sizeof(m.text) - 1] = 0;
+  sanitizeAscii(text, m.text, sizeof(m.text));
   _rev++;
   _chat_dirty = true;
   return _msg_head;
